@@ -3,7 +3,7 @@
 This project uses stsynphot.
 You must download synphot reference data separately.
 
-*HST data file*
+**HST data file**
 
  download link : https://ssb.stsci.edu/trds/tarfiles/synphot1.tar.gz
 
