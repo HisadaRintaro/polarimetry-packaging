@@ -34,6 +34,7 @@ export PYSYN_CDBS=/path/to/synphot
 
 ## Project structure
 
+```bash
 src/polarimetry_package/
 ├── pipeline/        # High-level execution pipelines and results
 │   ├── standard.py  # Standard analysis pipeline
@@ -44,14 +45,36 @@ src/polarimetry_package/
 │   └── stokes/      # Stokes parameter calculation
 ├── plotting/        # Plotting utilities and mixins
 ├── util/            # Small helpers (reader, decorators)
+```
 
 ## Basic usage
 
 A standard analysis can be executed via the pipeline interface.
 
+###example
+
 ```python
 from polarimetry_package.pipeline.standard import StandardPipeline
+from polarimetry_package.processing import InstrumentModel
+from polarimetry_package.processing.models import RectangleArea, CircleArea, Wave
+```
 
+---variables---
+
+```python
+directry= "FOC_POL_C1F/"
+rectangle = RectangleArea(x0=300, x1=400, y0=100, y1=200) 
+circle = CircleArea(radius=50, cx=350, cy=150)
+background_area = circle #optional area (rectangle or circle)
+image_area = RectangleArea(x0=13, x1=43, y0=15, y1=51) #image plottin area with use plot(area=image_area)
+wave = Wave(1000,10000,5000) # unit=Å, instrument covering wavelength
+bin_size = 10
+```
+
+```python
+---processing---
+
+instrument: InstrumentModel = InstrumentModel(file_directry=directry, suffix= "", extension= "")
 pipeline = StandardPipleline(
     instrument=instrument,
     area= background_area,
