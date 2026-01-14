@@ -16,6 +16,7 @@ This project is managed with Poetry.
 git clone https://github.com/HisadaRintaro/polarimetry-package.git
 cd polarimetry_package
 poetry install
+```
 
 ## stsynphot data setup
 
@@ -59,6 +60,7 @@ pipeline = StandardPipleline(
 )
 
 result = pipeline.run()
+```
 
 The result object provides unified access to analysis products:
 
@@ -68,10 +70,9 @@ result.flux
 result.stokes
 result.polarization_degree
 result.position_angle
+```
 
-### Plotting
 
-```md
 ## Plotting
 
 Image-like objects provide simple plotting methods.
@@ -80,6 +81,7 @@ Image-like objects provide simple plotting methods.
 
 ```python
 ax = result.images.plot("POL0", title="POL0 image")
+```
 
 Physical plottings are prepared under plotting. For example,
 
@@ -92,13 +94,13 @@ pa_ax = plotting.plot_position_angle(
         stretch="log"
         )
 pa_ax = background_area.add_region_patch(ax=pa_ax)
+```
 
 ## Tests
 
 Test FITS files are placed under `tests/FOC_POL_C1F/`.
 They are used for local verification and development.
 
-```md
 ## Design notes
 
 - Processing steps are designed to be composable and stateless where possible.
