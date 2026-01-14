@@ -51,15 +51,13 @@ src/polarimetry_package/
 
 A standard analysis can be executed via the pipeline interface.
 
-###example
-
 ```python
 from polarimetry_package.pipeline.standard import StandardPipeline
 from polarimetry_package.processing import InstrumentModel
 from polarimetry_package.processing.models import RectangleArea, CircleArea, Wave
 ```
 
----variables---
+---variables example---
 
 ```python
 directry= "FOC_POL_C1F/"
@@ -71,9 +69,9 @@ wave = Wave(1000,10000,5000) # unit=Å, instrument covering wavelength
 bin_size = 10
 ```
 
-```python
 ---processing---
 
+```python
 instrument: InstrumentModel = InstrumentModel(file_directry=directry, suffix= "", extension= "")
 pipeline = StandardPipleline(
     instrument=instrument,
