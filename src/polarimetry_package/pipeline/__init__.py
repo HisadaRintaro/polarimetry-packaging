@@ -1,7 +1,7 @@
-from .standard import run_pipeline
+from .standard import StandardPipeline
 from .result import PolarimetryResult
 
 __all__ = [
-        "run_pipeline",
+        "StandardPipeline",
         "PolarimetryResult",
         ]

@@ -25,7 +25,7 @@ class Area(ABC):
         "return matplotlib patch"
         pass
 
-    def plot_region(
+    def add_region_patch(
             self,
             ax = None,
             *,
