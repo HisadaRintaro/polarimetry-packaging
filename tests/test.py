@@ -29,12 +29,15 @@ result = pipeline.run()
 
 #---image plottings---#
 from polarimetry_package import plotting
+xc, yc = (275, 300)
 pa_ax = plotting.plot_position_angle(
         result.raws.data["POL0"],
         result.position_angle.theta,
+        xc=xc,
+        yc=yc,
         stretch="log"
         )
-pa_ax = background_area.add_region_patch(pix_size=result.raws.data["POL0"].get_pix_size(),ax=pa_ax)
+pa_ax = background_area.add_region_patch(pix_size=result.raws.data["POL0"].get_pix_size(),ax=pa_ax,xc=xc,yc=yc)
 
 
 #---transmittance curves---#

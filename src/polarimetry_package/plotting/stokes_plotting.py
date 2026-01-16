@@ -76,6 +76,8 @@ def plot_position_angle(
         back_image: ImageUnit,
         position_angle: ImageUnit,
         *,
+        xc=0,
+        yc=0,
         line_ratio=1,
         ax=None,
         stretch="asinh",
@@ -89,6 +91,8 @@ def plot_position_angle(
 
     ax = plot_stokes_para(
             back_image,
+            xc=xc,
+            yc=yc,
             ax= ax,
             stretch= stretch,
             vmin= vmin,
@@ -96,11 +100,11 @@ def plot_position_angle(
             title= title,
             **kwargs,
             )
-
+    
     mx, my = position_angle.make_grid()
     ax = plot_line(
-            mx,
-            my,
+            mx - xc*back_image.x_delta,
+            my - yc*back_image.y_delta,
             position_angle.image,
             length = line_ratio *position_angle.get_pix_size(),
             ax = ax,

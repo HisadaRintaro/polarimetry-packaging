@@ -21,7 +21,7 @@ class Area(ABC):
         pass
 
     @abstractmethod
-    def to_patch(self, pix_size, **kwargs) -> Patch:
+    def to_patch(self, pix_size, xc:int=0, yc:int=0, **kwargs) -> Patch:
         "return matplotlib patch"
         pass
 
@@ -30,6 +30,8 @@ class Area(ABC):
             pix_size,
             ax = None,
             *,
+            xc=0,
+            yc=0,
             color= "red",
             linewidth = 2,
             alpha = 1.0,
@@ -42,6 +44,8 @@ class Area(ABC):
 
         patch = self.to_patch(
                 pix_size,
+                xc=xc,
+                yc=yc,
                 edgecolor = color,
                 linewidth = linewidth,
                 alpha = alpha,
@@ -85,9 +89,14 @@ class RectangleArea(Area):
                     )
         return NotImplemented
 
-    def to_patch(self, pix_size, **kwargs) -> Patch:
+    def to_patch(self,
+                 pix_size,
+                 xc:int=0,
+                 yc:int=0,
+                 **kwargs
+                 ) -> Patch:
         return Rectangle(
-                xy= (self.x0 *pix_size, self.y0 *pix_size),
+                xy= ((self.x0 -xc) *pix_size, (self.y0 - yc)*pix_size),
                 width= (self.x1 - self.x0) *pix_size,
                 height= (self.y1 - self.y0) *pix_size,
                 fill= False,
@@ -119,10 +128,15 @@ class CircleArea(Area):
             return replace(self, radius= self.radius * other)
         return NotImplemented
 
-    def to_patch(self, pix_size, **kwargs) -> Patch:
+    def to_patch(self,
+                 pix_size,
+                 xc:int=0,
+                 yc:int=0,
+                 **kwargs
+                 ) -> Patch:
         return Circle(
                 radius= self.radius *pix_size,
-                xy= (self.cx*pix_size, self.cy*pix_size),
+                xy= ((self.cx -xc)*pix_size, (self.cy - yc)*pix_size),
                 fill= False,
                 **kwargs,
                 )
