@@ -144,7 +144,7 @@ All image-like data in this package are internally stored as ImageUnit, includin
 
 - `PositionAngle.theta`
 
-###Why ImageUnit?
+***Why ImageUnit?***
 
 - Ensures consistent handling of pixel scale
 
@@ -154,7 +154,7 @@ All image-like data in this package are internally stored as ImageUnit, includin
 
 - Simplifies pipeline composition and debugging
 
-###Example
+***Example***
 
 ```python
 img1 = ImageUnit.load(image1, x_delta=1, y_delta=1)
@@ -164,7 +164,7 @@ summed = img1 + img2
 masked = summed.apply_mask(mask)
 ```
 
-###Coordinate utilities
+***Coordinate utilities***
 
 `ImageUnit` provides helper methods to generate coordinate arrays and grids:
 
