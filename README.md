@@ -115,6 +115,68 @@ pa_ax = plotting.plot_position_angle(
 pa_ax = area.add_region_patch(ax=pa_ax)
 ```
 
+## Core data model: ImageUnit
+
+This package uses a unified internal representation called `ImageUnit`.
+
+`ImageUnit` is a lightweight immutable data object that represents:
+
+- a 2D image (`numpy.ndarray`)
+- pixel scale information (`x_delta`, `y_delta`)
+
+```python
+@dataclass
+class ImageUnit:
+    image: np.ndarray
+    x_delta: int
+    y_delta: int
+```
+
+All image-like data in this package are internally stored as ImageUnit, including:
+
+- `ImageSet.data` / `ImageSet.noise`
+
+- `FluxImage.flux` / `FluxImage.noise`
+
+- `StokesParameter.data` / `StokesParameter.noise`
+
+- `PolarizationDegree.P` / `PolarizationDegree.noise_P`
+
+- `PositionAngle.theta`
+
+###Why ImageUnit?
+
+- Ensures consistent handling of pixel scale
+
+- Enables safe immutable operations via dataclasses.replace
+
+- Supports arithmetic operations (`+`, `-`, `*` , `/`) between images
+
+- Simplifies pipeline composition and debugging
+
+###Example
+
+```python
+img1 = ImageUnit.load(image1, x_delta=1, y_delta=1)
+img2 = ImageUnit.load(image2, x_delta=1, y_delta=1)
+
+summed = img1 + img2
+masked = summed.apply_mask(mask)
+```
+
+###Coordinate utilities
+
+`ImageUnit` provides helper methods to generate coordinate arrays and grids:
+
+```python
+y_arr, x_arr = img.make_arrays(xc=0, yc=0)
+Y, X = img.make_grid()
+```
+
+These are used internally for plotting, binning, and region-based operations.
+
+
+
 ## Tests
 
 Test FITS files are placed under `tests/FOC_POL_C1F/`.
