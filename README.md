@@ -108,9 +108,8 @@ Physical plottings are prepared under plotting. For example,
 ```python
 from polarimetry_package import plotting
 pa_ax = plotting.plot_position_angle(
-        result.raws.data["POL0"].image,
-        result.position_angle.theta.image,
-        result.position_angle.theta.length(),
+        result.raws.data["POL0"],
+        result.position_angle.theta,
         stretch="log"
         )
 pa_ax = area.add_region_patch(ax=pa_ax)
