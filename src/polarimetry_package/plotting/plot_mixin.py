@@ -1,14 +1,14 @@
 from abc import ABC, abstractmethod
 from typing import Literal, cast
-import numpy as np
 from matplotlib.colors import Normalize
 from ..processing.models.area import RectangleArea
 from .util import get_norm
+from ..processing.models.image_unit import ImageUnit
 
 
 class ImagePlotMixin(ABC):
     @abstractmethod
-    def _get_image(self, kind: Literal["image", "noise"], key: str) -> np.ndarray:
+    def _get_image(self, kind: Literal["image", "noise"], key: str) -> ImageUnit:
         pass
 
     def plot(
@@ -34,10 +34,10 @@ class ImagePlotMixin(ABC):
         img = self._get_image(kind, key)
         if type(area) == RectangleArea:
             mask = area.make_mask(img.shape)
-            img = img[mask].reshape(area.shape())
+            img = img.apply_mask(mask)
 
         norm = get_norm(norm, vmin=vmin, vmax=vmax)
-        im = ax.imshow(img, cmap=cmap, norm=cast(Normalize,norm), **kwargs)
+        im = ax.imshow(img.image, cmap=cmap, norm=cast(Normalize,norm), **kwargs)
 
         if title:
             ax.set_title(title)

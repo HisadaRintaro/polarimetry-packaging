@@ -32,7 +32,6 @@ from polarimetry_package import plotting
 pa_ax = plotting.plot_position_angle(
         result.raws.data["POL0"],
         result.position_angle.theta,
-        bin_size,
         stretch="log"
         )
 pa_ax = background_area.add_region_patch(ax=pa_ax)

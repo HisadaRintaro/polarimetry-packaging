@@ -10,10 +10,14 @@ from typing import cast
 #    path_list = list(path.glob(pattern))
 #    return path_list
 
-def read_file(filename: str) -> tuple[np.ndarray | None, fits.Header]:
+def read_file(filename: str) -> tuple[np.ndarray, fits.Header]:
     with fits.open(filename) as hdul:
         hdu = cast(fits.PrimaryHDU, hdul[0])
-        return hdu.data, hdu.header
+        data = hdu.data
+        header = hdu.header
+        if data is None:
+            raise ValueError("data is None")
+        return data, header
 
 
 #HeaderRawへ移植済み(2026.1.8)

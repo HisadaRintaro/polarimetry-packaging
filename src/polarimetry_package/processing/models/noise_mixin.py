@@ -2,16 +2,17 @@ from abc import ABC, abstractmethod
 from typing import Literal
 import numpy as np
 from .area import RectangleArea
+from .image_unit import ImageUnit
 
 class NoiseMixin(ABC):
     @abstractmethod
-    def _get_image(self, kind: Literal["image", "noise"], key: str) -> np.ndarray:
+    def _get_image(self, kind: Literal["image", "noise"], key: str) -> ImageUnit:
         pass
 
     def SN(
         self,
         key: str = "POL0",
-        ) -> np.ndarray:
+        ) -> ImageUnit:
 
         image = self._get_image("image", key)
         noise = self._get_image("noise", key)
@@ -24,13 +25,12 @@ class NoiseMixin(ABC):
         ) -> np.ndarray:
 
         sn_img = self.SN(key)
-        return sn_img > ratio
+        return sn_img.image > ratio
         
     def plot_SN(
         self,
         *,
         key: str = "POL",
-        area: RectangleArea | None = None,
         ax= None,
         cmap = "Grays",
         norm= None,
@@ -44,10 +44,7 @@ class NoiseMixin(ABC):
             _, ax = plt.subplots()
 
         sn_img = self.SN(key)
-        if type(area) == RectangleArea:
-            mask = area.make_mask(sn_img.shape)
-            sn_img = sn_img[mask].reshape(area.shape())
-        im = ax.imshow(sn_img, cmap=cmap, norm=norm, **kwargs)
+        im = ax.imshow(sn_img.image, cmap=cmap, norm=norm, **kwargs)
 
         if title:
             ax.set_title(title)

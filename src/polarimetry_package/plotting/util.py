@@ -48,4 +48,3 @@ def get_norm(stretch, vmin= None, vmax=None) -> ImageNormalize:
         stretch= stretch_obj,
     )
     return norm
-

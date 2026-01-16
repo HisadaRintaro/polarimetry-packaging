@@ -1,9 +1,6 @@
 import numpy as np
 
-def to_flux(data: np.ndarray | None, exptime: float, photflam: float, unit: str) -> np.ndarray:
-    if data is None:
-        raise ValueError("data is None")
-
+def to_flux(data: np.ndarray, exptime: float, photflam: float, unit: str) -> np.ndarray:
     if unit == "count":
         return photflam * data / exptime
     elif unit == "count/s":
@@ -14,10 +11,7 @@ def to_flux(data: np.ndarray | None, exptime: float, photflam: float, unit: str)
         raise ValueError("unit must be 'count' or 'count/s'")
 
 
-def to_count_rate(data: np.ndarray | None, exptime: float, photflam: float, unit: str) -> np.ndarray:
-    if data is None:
-        raise ValueError("data is None")
-
+def to_count_rate(data: np.ndarray, exptime: float, photflam: float, unit: str) -> np.ndarray:
     if unit == "count":
         return data / exptime
     elif unit == "count/s":
@@ -28,10 +22,7 @@ def to_count_rate(data: np.ndarray | None, exptime: float, photflam: float, unit
         raise ValueError("unit must be 'count' or 'erg/s/cm-2/Å'")
 
 
-def to_count(data: np.ndarray | None, exptime: float, photflam: float, unit: str) -> np.ndarray:
-    if data is None:
-        raise ValueError("data is None")
-
+def to_count(data: np.ndarray, exptime: float, photflam: float, unit: str) -> np.ndarray:
     if unit == "count":
         raise RuntimeError("data is already count")
     elif unit == "count/s":

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Self
 
 @dataclass(frozen=True)
 class InstrumentModel:
@@ -7,6 +8,14 @@ class InstrumentModel:
     suffix:str
     extension: str 
     
+    @classmethod
+    def load(cls, file_directry, suffix="", extension="") -> Self:
+        return cls(
+                file_directry= file_directry,
+                suffix= suffix,
+                extension= extension,
+                )
+
     @staticmethod
     def get_path_list(file_directry: str, suffix: str, extension: str) -> list[Path]:
         path = Path(file_directry)

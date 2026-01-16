@@ -74,11 +74,11 @@ from polarimetry_package.pipeline.standard import StandardPipeline
 from polarimetry_package.processing import InstrumentModel
 from polarimetry_package.processing.models import RectangleArea, CircleArea, Wave
 
-inst = InstrumentModel(file_directry="FOC_POL_C1F")
+inst = InstrumentModel.load(file_directry="FOC_POL_C1F")
 area = RectangleArea(x0=300, x1=400, y0=100, y1=200) 
 wave = Wave(1000,10000,5000) # unit=Å, instrument covering wavelength
 
-pipeline = StandardPipleline(inst, area, bin_size=10, wave=wave)
+pipeline = StandardPipeline(inst, area, bin_size=10, wave=wave)
 result = pipeline.run()
 ```
 
@@ -108,12 +108,12 @@ Physical plottings are prepared under plotting. For example,
 ```python
 from polarimetry_package import plotting
 pa_ax = plotting.plot_position_angle(
-        result.raws.data["POL0"],
-        result.position_angle.theta,
-        bin_size,
+        result.raws.data["POL0"].image,
+        result.position_angle.theta.image,
+        result.position_angle.theta.length(),
         stretch="log"
         )
-pa_ax = background_area.add_region_patch(ax=pa_ax)
+pa_ax = area.add_region_patch(ax=pa_ax)
 ```
 
 ## Tests

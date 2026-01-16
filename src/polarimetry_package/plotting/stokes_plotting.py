@@ -4,31 +4,27 @@ import matplotlib.pyplot as plt
 
 from ..processing.stokes.transmittance import Transmittance
 from .base import setup_ax, add_colorbar
-from .util import make_grid, plot_line
-from ..processing.models.area import RectangleArea
+from .util import plot_line
 from .util import get_norm
 from ..processing.stokes.demodulation_matrix import DemodulationMatrixFactory, Wave
+from ..processing.models.image_unit import ImageUnit
 
 
 def plot_stokes_para(
-    image,
-    *,
-    area: RectangleArea | None = None,
-    ax=None,
-    stretch="asinh",
-    vmin=None,
-    vmax=None,
-    title="",
-):
+        image: ImageUnit,
+        *,
+        ax=None,
+        stretch="asinh",
+        vmin=None,
+        vmax=None,
+        title="",
+    ):
     ax = setup_ax(ax)
 
     norm = get_norm(stretch, vmin=vmin, vmax=vmax)
 
-    if type(area) == RectangleArea:
-        mask = area.make_mask(image.shape)
-        image = image[mask].reshape(area.shape())
 
-    im = ax.imshow(image, norm=cast(Normalize,norm), cmap="gray")
+    im = ax.imshow(image.image, norm=cast(Normalize,norm), cmap="gray")
     ax.set_title(f"Stokes {title}")
     add_colorbar(im, ax)
 
@@ -39,7 +35,6 @@ def show_stokes_panel(
         Q,
         U,
         *,
-        area: RectangleArea | None = None,
         axes = None,
         figsize= (15,4),
         stretchs: tuple = ("log", "asinh","asinh"),
@@ -55,7 +50,6 @@ def show_stokes_panel(
     for name, image in images.items():
         plot_stokes_para(
                 image,
-                area=area,
                 ax=axes[n],
                 stretch=stretchs[n],
                 vmin=vmins[n],
@@ -67,35 +61,33 @@ def show_stokes_panel(
 
 
 def plot_position_angle(
-    back_image,
-    position_angle,
-    length,
-    *,
-    area: RectangleArea | None = None,
-    ax=None,
-    stretch="asinh",
-    vmin=None,
-    vmax=None,
-    c= "white",
-    linewidth= 1,
-    **kwargs,
-    ):
+        back_image: ImageUnit,
+        position_angle: ImageUnit,
+        *,
+        line_length=10,
+        ax=None,
+        stretch="asinh",
+        vmin=None,
+        vmax=None,
+        c= "white",
+        linewidth= 1,
+        **kwargs,
+        ):
 
     ax = plot_stokes_para(
             back_image,
-            area= area,
             ax= ax,
             stretch= stretch,
             vmin= vmin,
             vmax= vmax,
             )
 
-    mx, my = make_grid(position_angle.shape)
+    mx, my = position_angle.make_grid()
     ax = plot_line(
-            mx * length,
-            my * length,
-            position_angle,
-            length = length,
+            mx,
+            my,
+            position_angle.image,
+            length = line_length,
             ax = ax,
             c= c,
             linewidth= linewidth,

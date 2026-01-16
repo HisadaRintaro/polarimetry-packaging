@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from astropy.units import nd
 import numpy as np
 import stsynphot
 from typing import Self
@@ -53,6 +54,7 @@ class Transmittance:
         band_filter  = stsynphot.band(self.band_spec_filter())
         return band_filter(wave).value / band_base(wave).value
 
+
     def trans_mean(self, wave: Wave) -> float:
         wave_array = wave.array()
         wave_diff = wave.differential()
@@ -61,6 +63,15 @@ class Transmittance:
         trans_filter = self.trans_curve_filter(wave_array)
 
         return (trans_pol* trans_filter).sum() * wave_diff / (trans_filter.sum() * wave_diff)
+    
+    def wave_mean(self, wave:Wave) -> float:
+        wave_array = wave.array()
+        wave_diff = wave.differential()
+
+        trans_filter = self.trans_curve_filter(wave_array)
+
+        return (wave_array * trans_filter).sum() * wave_diff / (trans_filter.sum() * wave_diff)
+
 
 #plotting/stokes_plottingへ移植済み(2026.1.14)
 #    def plot_curve(

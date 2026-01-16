@@ -1,5 +1,5 @@
 from typing import Self, cast
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import numpy as np
 import scipy
 from typing import Any, Literal
@@ -9,6 +9,7 @@ from ..instrument.instrument import InstrumentModel
 from ..models.header import HeaderProfile, HeaderRaw
 from ..models.noise_set import Noise
 from ..models.area import Area
+from ..models.image_unit import ImageUnit
 from ...plotting.plot_mixin import ImagePlotMixin
 from ..models.noise_mixin import NoiseMixin
 from ...util.reader import read_file
@@ -17,8 +18,8 @@ from ...util.decorator import record_step
 
 @dataclass(frozen=True)
 class ImageSet(ImagePlotMixin, NoiseMixin):
-    data: dict[str, np.ndarray | None]
-    noise: dict[str, Noise | None] | None
+    data: dict[str, ImageUnit]
+    noise: dict[str, Noise] 
     hdr_profile: HeaderProfile 
     status: dict[str, Literal["PENDING", "PERFORM", "COMPLETE", "SKIPPED"]]
     status_keyword: dict[str, dict[str, Any]]
@@ -26,7 +27,7 @@ class ImageSet(ImagePlotMixin, NoiseMixin):
     def __repr__(self) -> str:
         keys = list(self.data.keys())
         shapes = {
-            k: (None if v is None else v.shape)
+            k: (None if v is None else v.shape())
             for k, v in self.data.items()
         }
         return (
@@ -38,15 +39,15 @@ class ImageSet(ImagePlotMixin, NoiseMixin):
         )
 
     @staticmethod
-    def load_data(path_list: list) -> tuple[dict[str, np.ndarray | None], HeaderProfile]:
-        dat_dict: dict[str, np.ndarray | None] = {}
+    def load_data(path_list: list, x_delta=1, y_delta=1) -> tuple[dict[str, ImageUnit], HeaderProfile]:
+        dat_dict: dict[str, ImageUnit] = {}
         hdr_dict: dict[str, HeaderRaw] = {}
 
         for path in path_list:
             data, header = read_file(path)
             hdr = HeaderRaw.parse_header(header)
             filename: str = path.name
-            dat_dict[filename] = data
+            dat_dict[filename] = ImageUnit(data, x_delta, y_delta)
             hdr_dict[filename] = hdr
 
         hdr_profile = HeaderProfile(raw= hdr_dict)
@@ -54,32 +55,31 @@ class ImageSet(ImagePlotMixin, NoiseMixin):
         return dat_dict, hdr_profile
         
     @classmethod
-    def load(cls, instrument_info: InstrumentModel) -> Self:
+    def load(cls, instrument_info: InstrumentModel, bin_size=1) -> Self:
         path_list = instrument_info.path_list()
         data, hdr_profile = cls.load_data(path_list)
 
-        return cls(data= data, noise= None, 
+        return cls(data= data, noise= {pol: Noise.default(bin_size=bin_size) for pol,_ in data.items()}, 
                         hdr_profile= hdr_profile,
                         status={}, status_keyword={"POL0":{},"POL60":{},"POL120":{}}) 
     
     @record_step("sum")
     def sum(self) -> Self:
-        summed: dict[str, np.ndarray | None] = {}
-
-        for fname, data in self.data.items():
-            if data is None:
-                continue
-
+        summed: dict[str, ImageUnit] = {}
+        noise_dict: dict[str, Noise] = {}
+        for fname, data, noise in self:
             pol = self.hdr_profile.polarizer_of(fname)
-
             if pol not in summed:
-                summed[pol] = data.copy()
+                summed[pol] = data
             else:
-                summed[pol] += data
+                summed[pol] = data + summed[pol]
+
+            if pol not in noise_dict:
+                noise_dict[pol] = noise
 
         return type(self)(
                 data= summed,
-                noise= None,
+                noise= noise_dict,
                 hdr_profile= self.hdr_profile.sum(),
                 status= self.status,
                 status_keyword=self.status_keyword,
@@ -92,22 +92,25 @@ class ImageSet(ImagePlotMixin, NoiseMixin):
                     "align() requires 'sum' = 'COMPLETE'"
                     )
 
-        aligned: dict[str, np.ndarray | None]= {}
-        noise: dict[str, Noise | None]= {}
+        aligned: dict[str, ImageUnit]= {}
+        noise_dict: dict[str, Noise]= {}
         new_status_kw = deepcopy(self.status_keyword)
         base_pol = next(iter(self.data))
         base_data = self.data[base_pol]
-        for pol, data in self.data.items():
-            shifts = shift.find_shift(data, base_data) #For Using ndimage.shift, must input base_data to pix2.
-            aligned_data = scipy.ndimage.shift(data, shifts, mode="nearest")
-            aligned[pol] = aligned_data
-            noise[pol] = Noise(np.sqrt(aligned_data), None, bin_size=1)
+
+        for pol, data, noise in self:
+            #For Using ndimage.shift, must input base_data to pix2.
+            shifts = shift.find_shift(pix1=data.image, pix2=base_data.image)
+            aligned_data: np.ndarray = scipy.ndimage.shift(data.image, shifts, mode="nearest")
+            aligned[pol] = replace(data, image=aligned_data)
+            count_noise: ImageUnit = replace(data, image=np.sqrt(aligned_data))
+            noise_dict[pol] = replace(noise, count_noise=count_noise)
             new_status_kw[pol]["x_shift"] = shifts[1]
             new_status_kw[pol]["y_shift"] = shifts[0]
 
         return type(self)(
                 data= aligned,
-                noise= noise,
+                noise= noise_dict,
                 hdr_profile= self.hdr_profile,
                 status= self.status,
                 status_keyword= new_status_kw,
@@ -120,33 +123,24 @@ class ImageSet(ImagePlotMixin, NoiseMixin):
                     "background_subtract() requires 'align' = 'COMPLETE'"
                     )
 
-        background_subtract: dict[str, np.ndarray | None] = {}
+        background_subtract: dict[str, ImageUnit] = {}
         new_status_kw = deepcopy(self.status_keyword)
-        noise: dict[str, Noise | None] = {}
+        noise_dict: dict[str, Noise] = {}
 
-        pol0 = self.data["POL0"]
-        if pol0 is None:
-            raise ValueError("POL0 data is None")
-        mask = area.make_mask(pol0.shape)
-
-        for pol, data in self.data.items():
-            background_value = background.cal_background(data, mask, method=method)
-            background_noise = background.cal_background_noise(data, mask)
-            background_subtract[pol] = background.subtract_background(data, background_value)
+        for pol, data, noise in self:
+            mask = area.make_mask(data.shape())
+            background_value: np.floating = background.cal_background(data.image, mask, method=method)
+            background_noise: np.floating = background.cal_background_noise(data.image, mask)
+            background_subtract[pol] = data - background_value
+            noise_dict[pol] = replace(noise, background_noise= background_noise)
             new_status_kw[pol]["background_value"] = background_value
             new_status_kw[pol]["background_noise"] = background_noise
             new_status_kw[pol]["area"] = area
-            if self.noise is None:
-                raise ValueError("noise is None")
-            noise_obj = self.noise[pol]
-            if noise_obj is None:
-                raise ValueError(f"Noise for {pol} is None")
 
-            noise[pol] = Noise(noise_obj.count_noise, background_noise, bin_size=1)
 
         return type(self)(
-                data= self.data,
-                noise= noise,
+                data= background_subtract,
+                noise= noise_dict,
                 hdr_profile= self.hdr_profile,
                 status= self.status,
                 status_keyword= new_status_kw,
@@ -158,35 +152,34 @@ class ImageSet(ImagePlotMixin, NoiseMixin):
             raise RuntimeError(
                     "binning() requires 'background_subtract' = 'COMPLETE'"
                     )
-        if self.noise is None:
-            raise ValueError("noise is None")
         
-        binned: dict[str, np.ndarray | None] = {}
-        binned_noise: dict[str, Noise | None] = {}
+        binned: dict[str, ImageUnit] = {}
+        binned_noise: dict[str, Noise] = {}
         new_status_kw = deepcopy(self.status_keyword)
         
-        for pol, data in self.data.items():
-            binned[pol] = binning.binning_image(data, bin_size) 
-        for pol, polarizer_noise in self.noise.items():
-            if polarizer_noise is None: raise ValueError("polarizer_noise is None")
-            binned_noise[pol]= Noise(count_noise= polarizer_noise.count_noise,
-                                     background_noise= polarizer_noise.background_noise,
-                                     bin_size= bin_size)
+        for pol, data, noise in self:
+            binned[pol] = ImageUnit(
+                    image= binning.binning_image(data.image, bin_size),
+                    x_delta= data.x_delta * bin_size,
+                    y_delta= data.y_delta * bin_size,
+                    )
+            binned_noise[pol]= replace(noise, bin_size=bin_size)
             new_status_kw[pol]["bin_size"] = bin_size
         
 
         return type(self)(
-                data= binned,
+                data= binned, 
                 noise= binned_noise,
                 hdr_profile= self.hdr_profile,
                 status= self.status,
                 status_keyword= new_status_kw,
                 )
 
-    def _get_image(self, kind: Literal["image", "noise"], key: str) -> np.ndarray:
+    def _get_image(self, kind: Literal["image", "noise"], key: str) -> ImageUnit:
         if kind == "image":
-            return cast(np.ndarray, self.data[key])
+            return self.data[key]
         elif kind == "noise":
-            if self.noise == None:
-                raise ValueError("noise is None")
-            return cast(np.ndarray, self.noise[key])
+            return self.noise[key].cal_noise()
+
+    def __iter__(self):
+        yield from zip(self.data.keys(), self.data.values(), self.noise.values())
