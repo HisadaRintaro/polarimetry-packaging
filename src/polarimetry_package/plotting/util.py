@@ -1,12 +1,13 @@
 import numpy as np
 from astropy.visualization import ImageNormalize, AsinhStretch, LogStretch, LinearStretch
 from .base import setup_ax
+from ..processing.models.image_unit import ImageUnit
 
 def plot_line(
         cx,
         cy,
         theta,
-        length = 10,
+        length,
         ax = None,
         c= "white",
         linewidth=1,
@@ -48,3 +49,10 @@ def get_norm(stretch, vmin= None, vmax=None) -> ImageNormalize:
         stretch= stretch_obj,
     )
     return norm
+
+def make_extent(image: ImageUnit, xc=0, yc=0) -> tuple:
+    x_arr, y_arr = image.make_arrays(xc=xc, yc=yc)
+    return (
+            x_arr[0], x_arr[-1],
+            y_arr[0], y_arr[-1],
+            )

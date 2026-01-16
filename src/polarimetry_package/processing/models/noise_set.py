@@ -1,6 +1,6 @@
 from typing import Any, Self
 import numpy as np
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from ..image.binning import binning_image
 from .image_unit import ImageUnit
 

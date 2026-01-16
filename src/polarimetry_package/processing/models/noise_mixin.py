@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Literal
 import numpy as np
-from .area import RectangleArea
 from .image_unit import ImageUnit
 
 class NoiseMixin(ABC):

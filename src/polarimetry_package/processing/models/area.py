@@ -21,12 +21,13 @@ class Area(ABC):
         pass
 
     @abstractmethod
-    def to_patch(self, **kwargs) -> Patch:
+    def to_patch(self, pix_size, **kwargs) -> Patch:
         "return matplotlib patch"
         pass
 
     def add_region_patch(
             self,
+            pix_size,
             ax = None,
             *,
             color= "red",
@@ -40,6 +41,7 @@ class Area(ABC):
             _, ax = plt.subplots()
 
         patch = self.to_patch(
+                pix_size,
                 edgecolor = color,
                 linewidth = linewidth,
                 alpha = alpha,
@@ -83,11 +85,11 @@ class RectangleArea(Area):
                     )
         return NotImplemented
 
-    def to_patch(self, **kwargs) -> Patch:
+    def to_patch(self, pix_size, **kwargs) -> Patch:
         return Rectangle(
-                xy= (self.x0, self.y0),
-                width= self.x1 - self.x0,
-                height= self.y1 - self.y0,
+                xy= (self.x0 *pix_size, self.y0 *pix_size),
+                width= (self.x1 - self.x0) *pix_size,
+                height= (self.y1 - self.y0) *pix_size,
                 fill= False,
                 **kwargs,
                 )
@@ -117,10 +119,10 @@ class CircleArea(Area):
             return replace(self, radius= self.radius * other)
         return NotImplemented
 
-    def to_patch(self, **kwargs) -> Patch:
+    def to_patch(self, pix_size, **kwargs) -> Patch:
         return Circle(
-                radius= self.radius,
-                xy= (self.cx, self.cy),
+                radius= self.radius *pix_size,
+                xy= (self.cx*pix_size, self.cy*pix_size),
                 fill= False,
                 **kwargs,
                 )

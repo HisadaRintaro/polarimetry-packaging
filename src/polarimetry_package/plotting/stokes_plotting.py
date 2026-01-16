@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 from ..processing.stokes.transmittance import Transmittance
 from .base import setup_ax, add_colorbar
-from .util import plot_line
+from .util import plot_line, make_extent
 from .util import get_norm
 from ..processing.stokes.demodulation_matrix import DemodulationMatrixFactory, Wave
 from ..processing.models.image_unit import ImageUnit
@@ -13,19 +13,29 @@ from ..processing.models.image_unit import ImageUnit
 def plot_stokes_para(
         image: ImageUnit,
         *,
+        xc = 0,
+        yc = 0,
         ax=None,
+        cmap = "gray",
         stretch="asinh",
         vmin=None,
         vmax=None,
         title="",
+        **kwargs,
     ):
     ax = setup_ax(ax)
 
     norm = get_norm(stretch, vmin=vmin, vmax=vmax)
+    extent = make_extent(image, xc=xc, yc=yc)
 
-
-    im = ax.imshow(image.image, norm=cast(Normalize,norm), cmap="gray")
-    ax.set_title(f"Stokes {title}")
+    im = ax.imshow(
+                                image.image,
+                                norm=cast(Normalize,norm),
+                                cmap=cmap,
+                                extent= extent,
+                                **kwargs,
+                                )
+    ax.set_title(title)
     add_colorbar(im, ax)
 
     return ax
@@ -40,6 +50,7 @@ def show_stokes_panel(
         stretchs: tuple = ("log", "asinh","asinh"),
         vmins: tuple = (None, None, None),
         vmaxs: tuple = (None, None, None),
+        **kwargs,
         ):
         
     images = {"I":I, "Q":Q, "U":U}
@@ -55,6 +66,7 @@ def show_stokes_panel(
                 vmin=vmins[n],
                 vmax=vmaxs[n],
                 title=name,
+                **kwargs,
                 )
         n += 1
     return axes
@@ -64,13 +76,14 @@ def plot_position_angle(
         back_image: ImageUnit,
         position_angle: ImageUnit,
         *,
-        line_length=10,
+        line_ratio=1,
         ax=None,
         stretch="asinh",
         vmin=None,
         vmax=None,
         c= "white",
         linewidth= 1,
+        title= "",
         **kwargs,
         ):
 
@@ -80,6 +93,8 @@ def plot_position_angle(
             stretch= stretch,
             vmin= vmin,
             vmax= vmax,
+            title= title,
+            **kwargs,
             )
 
     mx, my = position_angle.make_grid()
@@ -87,7 +102,7 @@ def plot_position_angle(
             mx,
             my,
             position_angle.image,
-            length = line_length,
+            length = line_ratio *position_angle.get_pix_size(),
             ax = ax,
             c= c,
             linewidth= linewidth,

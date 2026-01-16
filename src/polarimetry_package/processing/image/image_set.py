@@ -39,7 +39,7 @@ class ImageSet(ImagePlotMixin, NoiseMixin):
         )
 
     @staticmethod
-    def load_data(path_list: list, x_delta=1, y_delta=1) -> tuple[dict[str, ImageUnit], HeaderProfile]:
+    def load_data(path_list: list) -> tuple[dict[str, ImageUnit], HeaderProfile]:
         dat_dict: dict[str, ImageUnit] = {}
         hdr_dict: dict[str, HeaderRaw] = {}
 
@@ -47,7 +47,8 @@ class ImageSet(ImagePlotMixin, NoiseMixin):
             data, header = read_file(path)
             hdr = HeaderRaw.parse_header(header)
             filename: str = path.name
-            dat_dict[filename] = ImageUnit(data, x_delta, y_delta)
+            delta = hdr.get_pix_size()
+            dat_dict[filename] = ImageUnit(data, delta, delta)
             hdr_dict[filename] = hdr
 
         hdr_profile = HeaderProfile(raw= hdr_dict)

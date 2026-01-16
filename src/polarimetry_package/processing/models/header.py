@@ -26,6 +26,15 @@ class HeaderRaw:
                 exptime= cast(float,header.get("exptime",np.nan))
                 )
 
+    def get_pix_size(self) -> float:
+        #そのうちzoomかどうかも判別することが必要。その時はImageSetのload_dataのdeltaも変更すること。
+        if self.optical == "F96":
+            return 14 / 512 #arcsec
+        elif self.optical == "F48":
+            return 28 / 512 #arcsec
+        else:
+            raise ValueError("get_pix_size() requires optical=='F96'or'F48'.")
+
 @dataclass
 class HeaderProfile:
     raw: dict[str, HeaderRaw]
@@ -96,4 +105,3 @@ class HeaderProfile:
 
     def polarizer_of(self,fname) -> str:
         return self.raw[fname].polarizer
-    

@@ -34,7 +34,7 @@ pa_ax = plotting.plot_position_angle(
         result.position_angle.theta,
         stretch="log"
         )
-pa_ax = background_area.add_region_patch(ax=pa_ax)
+pa_ax = background_area.add_region_patch(pix_size=result.raws.data["POL0"].get_pix_size(),ax=pa_ax)
 
 
 #---transmittance curves---#

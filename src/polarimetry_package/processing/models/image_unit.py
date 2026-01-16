@@ -6,8 +6,8 @@ import numpy as np
 @dataclass
 class ImageUnit:
     image: np.ndarray
-    x_delta: int
-    y_delta: int
+    x_delta: float
+    y_delta: float
 
     @classmethod
     def load(cls, image: np.ndarray, x_delta=1, y_delta=1):
@@ -24,10 +24,10 @@ class ImageUnit:
         y_size, x_size = self.image.shape
         x_arr = (np.arange(x_size) - xc ) * self.x_delta
         y_arr = (np.arange(y_size) - yc ) * self.y_delta
-        return y_arr, x_arr
+        return x_arr, y_arr
 
     def make_grid(self, xc=0, yc=0) -> tuple[np.ndarray, np.ndarray]:
-        y_arr, x_arr = self.make_arrays(xc=xc, yc=yc)
+        x_arr, y_arr = self.make_arrays(xc=xc, yc=yc)
         return np.meshgrid(x_arr, y_arr)
 
     def apply_mask(self, mask:np.ndarray) -> Self:
@@ -35,6 +35,8 @@ class ImageUnit:
                 self,
                 image= self.image * mask
                 )
+    def get_pix_size(self):
+        return list({self.x_delta, self.y_delta})[0]
 
     def __add__(self, other: Self | Any):
         if isinstance(other, type(self)):
