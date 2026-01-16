@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class PolarimetryResult:
+    filelist: list[str]
     raws: ImageSet
     images: ImageSet
     flux: FluxImage
@@ -15,6 +16,7 @@ class PolarimetryResult:
     def __repr__(self) -> str:
         return (
             "PolarimetryResult(\n"
+            f"filelist = {self.filelist!r}"
             f"raws = {self.raws!r},\n"
             f"images= {self.images!r},\n"
             f"flux= {self.flux!r},\n"

@@ -33,6 +33,7 @@ class StandardPipeline:
         position_angle = PositionAngle.load(stokes, mask=mask)
 
         return PolarimetryResult(
+                filelist= self.instrument.path_list(),
                 raws= ImageSet.load(self.instrument).sum(),
                 images= images,
                 flux= flux,
