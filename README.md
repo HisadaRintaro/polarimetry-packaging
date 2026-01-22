@@ -85,6 +85,8 @@ result = pipeline.run()
 The result object provides unified access to analysis products:
 
 ```python
+result.filelist
+result.raws
 result.images
 result.flux
 result.stokes
